@@ -20,3 +20,24 @@
 
 - 既不会重复安装，也不会污染全局，使用符号链接去指向之前的安装
   快速且省空间 pnpm
+
+- pic 文件夹中的node-modules文件夹删去 这是旧时代的安装方式，没有用处
+
+- pnpm i openai
+
+- mian.mjs 主入口，单点入口的职责  
+  mjs es6 module import from
+
+- 调适能力
+  console.log(result) 查看它的json结构
+
+- 理解参数 
+  gpt4o 多模态读图能力
+    - 文本指令
+    - 图片地址
+
+- try catch
+  容错
+
+- key 不能提交到github
+  资产的安全风险
