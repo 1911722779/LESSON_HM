@@ -1,0 +1,25 @@
+/* 
+    @author cn
+    @date 2025-5-15
+*/
+
+.button-sp-area {
+    margin: 15px aito;
+    padding: 15px;
+    text-align: center;
+}
+
+.weui-btn {
+    display: block;
+    width: 184px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 12px 24;
+    font-weight: 500;
+    font-size: 17px;
+    text-align: center;
+    line-height: 1.4111;
+    text-decoration: none;
+    color:#fff;
+    background-color: #4c6ead;
+}
