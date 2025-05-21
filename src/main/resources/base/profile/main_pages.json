@@ -1,0 +1,16 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/ProgressPage",
+    "pages/LinearPage",
+    "pages/RelativePage",
+    "pages/StackPage",
+    "pages/GridPage",
+    "pages/ListPage",
+    "pages/WaterFlowPage",
+    "pages/StatePage",
+    "pages/prop/ParentPage",
+    "pages/link/CardPage",
+    "pages/provide/ProPage"
+  ]
+}
