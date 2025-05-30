@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    // let arr = []
+    // console.log(arr); //空数组
+    // arr[0] = 1
+    // arr[1] = 2
+    // arr[2] = 3
+    // console.log(arr);
+
+    // let arr =['jar', 'pink','gray','white','black']
+    // arr[1] = 'red' // 改
+    // // 给所有数组元素后面加个‘老师’ 修改
+    // for(let i = 0; i < arr.length;i++){
+    //   arr[i] += '老师'
+    // }
+    // console.log(arr);
+
+    // let arr = ['jar','pink']
+    // // 新增 直接在数组末尾新增数据
+    // arr.push('white')
+    // console.log(arr)
+    // // 开头追加
+    // arr.unshift('black')
+    // console.log(arr);
+    
+    // 删除
+    let arr= ['jar','pink','black','white','gray']
+    // 删除最后一个元素
+    arr.pop()
+    console.log(arr); // ['jar', 'pink', 'black', 'white']
+    // 删除第一个元素
+    arr.shift()
+    console.log(arr); // ['pink', 'black', 'white']
+    // 删除指定位置的元素 splice(起始位置，删除元素数量)
+    arr.splice(2,1)
+    console.log(arr); // ['pink', 'black']
+
+  </script>
+</body>
+</html>
