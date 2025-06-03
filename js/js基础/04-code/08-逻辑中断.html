@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    function fn(x,y){
+      x=x || 0
+      y=y || 0
+      console.log(x+y)
+    }
+
+    console.log(false && 3+5); // 返回false
+    console.log(3+5 && false); // 返回false
+
+    console.log(false || 3+5); // 返回3+5
+    console.log(3+5 || false); // 返回3+5
+    let age = 18
+    console.log(11 || age++); // 返回11
+
+    console.log(11 && 22); // 返回22
+    console.log(11 || 22); // 返回11
+    
+    
+  </script>
+</body>
+</html>
