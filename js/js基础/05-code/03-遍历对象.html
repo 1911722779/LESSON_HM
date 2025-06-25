@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    let arr = ['a','b','c','d','e']
+    for (let k in arr) {
+      // console.log(typeof k);
+      console.log(k); // 数组的下标 索引号 但是为字符串string
+      console.log(arr[k]);
+    }
+    let obj = {
+      name:'jar',
+      age:18,
+      gender:'女'
+    }
+    // 遍历对象
+    for (let k in obj) {
+      console.log(k); // 输出的k为属性名,为'属性名'
+      console.log(obj.k) // 输出为undefined
+      console.log(obj['name']) // 输出为jar
+      console.log(obj[k]) // 输出为属性值 
+    }
+  </script>
+</body>
+</html>
