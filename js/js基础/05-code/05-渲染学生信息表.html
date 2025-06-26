@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学生信息表</title>
+  <style>
+    table{
+      width: 600px;
+      text-align: center;
+    }
+    table,th,td{
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    caption{
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    tr{
+      height: 40px;
+      cursor: pointer;
+    }
+    table tr :nth-child(1){
+      background-color: #ddd;
+    }
+    table tr :not(:first-child){
+      background-color: #eee;
+    }
+  </style>
+</head>
+
+<body>
+  <table>
+    <caption>学生列表</caption>
+    <tr>
+      <th>序号</th>
+      <th>姓名</th>
+      <th>年龄</th>
+      <th>性别</th>
+      <th>家乡</th>
+    </tr>
+
+
+    <!-- script写在这里 -->
+    <script>
+      // 1. 数据准备
+      let students = [
+        {
+          name: 'jar',
+          age: 19,
+          gender: '女',
+          hometown: '江西省'
+        },
+        {
+          name: '小明',
+          age: 19,
+          gender: '男',
+          hometown: '河南省'
+        },
+        {
+          name: '小红',
+          age: 19,
+          gender: '女',
+          hometown: '浙江省'
+        }
+      ]
+      // 2. 渲染页面
+      for (let i = 0; i < students.length; i++) {
+        document.write(`
+          <tr>
+            <td>${i + 1}</td>
+            <td>${students[i].name}</td>
+            <td>${students[i].age}</td>
+            <td>${students[i].gender}</td>
+            <td>${students[i].hometown}</td>
+          </tr>
+        `)
+      }
+    </script>
+  </table>
+
+</body>
+
+</html>
