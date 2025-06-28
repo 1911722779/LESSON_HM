@@ -68,4 +68,32 @@ localhost ：8090/library ==> library/index.vue
 vue中所有的路由、地址与地址映射关系表，都在 `routers` 文件夹下
 
 
+## 6.26
+遇到问题：
+1. 菜单栏 动态生成之后 默认的属性不能生效
+2. 网格布局不能滑动
+解决问题：
+1. 菜单栏有默认属性且生效
+2. 网格布局可滑动
+3. 组合查询
 
+## 6.27
+遇到问题：
+组合搜索虽然可以通过记录上一次的queryParams数据缓存实现，但是存在用户无法得知自己的选择条件是否生效或者符合自己的筛选方向，这种交互逻辑存在问题
+如何解决：
+根本原因时ElementUI菜单是无法多选的 
+1. 换掉ElementUI
+2. 手动生成菜单，让每个菜单独立（复制多份菜单）
+3. 通过另外一个方式显示已选的条件 
+
+完成歌单页面
+1. 使用flex布局
+2. 下拉框 页签 网络布局 分页组件
+
+```ts
+API 接口
+/** 获取推荐歌单 */
+export const getRecommendedPlaylists = () => {
+  return http<Result>('get', '/playlist/getRecommendedPlaylists')
+}
+```

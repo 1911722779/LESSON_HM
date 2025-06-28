@@ -35,6 +35,11 @@ const router = createRouter({
       // 歌手
       component: () => import('@/pages/artist/index.vue'),
     },
+        {
+      path: '/playlist',
+      // 歌单
+      component: () => import('@/pages/playlist/index.vue'),
+    },
   ],
 })
 

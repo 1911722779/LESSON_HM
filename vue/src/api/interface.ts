@@ -82,3 +82,12 @@ export interface RecommendedPlay{
   title:string,
   coverUrl:string
 }
+// 歌手信息实体
+export interface Artist{
+  //歌手ID
+  artistId:number,
+  // 歌手名称
+  artistName:string,
+  // 歌手头像
+  avatar:string
+}
