@@ -2,10 +2,15 @@
 // ElementUI icon库
 import { Search, VideoPlay } from '@element-plus/icons-vue'
 import defaultCoverImg from '@/assets/cover.png'
-import { getAllPlaylists, getRecommendedPlaylists } from '@/api/system'
+import {
+  getAllPlaylists,
+  getFavoritePlaylists,
+  getRecommendedPlaylists,
+} from '@/api/system'
 import { isMobile } from '@/utils'
 import { RecommendedPlay } from '@/api/interface'
 import { ElMessage } from 'element-plus'
+import router from '@/routers'
 
 // 音乐风格数据
 const styleTags = [
@@ -30,8 +35,6 @@ const styleTags = [
 ]
 
 // 下拉框选择事件
-// 当前选中的下拉值
-const selectedList = ref('全部')
 
 // 当前页
 const currentPage = ref(1)
@@ -52,18 +55,24 @@ const queryParams = ref({
 // 歌手搜索变量
 const searchKeyword = ref('')
 
-// 搜索歌手名称事件
+// // 搜索歌手名称事件
+// const handleSearch = async () => {
+//   // 会有搜索条件 queryParams 需要重置参数
+//   queryParams.value = {
+//     pageNum: currentPage.value,
+//     pageSize: pageSize.value,
+//     // 歌单标题
+//     title: searchKeyword.value,
+//     // 歌单风格
+//     style: null,
+//   }
+//   // 重新查询歌单信息列表
+//   await getPlayList(queryParams.value)
+// }
+// 或
 const handleSearch = async () => {
-  // 会有搜索条件 queryParams 需要重置参数
-  queryParams.value = {
-    pageNum: currentPage.value,
-    pageSize: pageSize.value,
-    // 歌单标题
-    title: searchKeyword.value,
-    // 歌单风格
-    style: null,
-  }
-  // 重新查询歌手信息列表
+  queryParams.value.title = searchKeyword.value
+  queryParams.value.pageNum = 1
   await getPlayList(queryParams.value)
 }
 
@@ -87,16 +96,57 @@ const pageConfig = reactive({
 //
 const playListType = ref(['精选歌单', '我的收藏'])
 // 推荐歌单
-const recommendedPlaylist = ref([])
+const playlist = ref([])
+const styleTag = ref('全部')
 
 const getPlayList = async (queryParams: any) => {
   const result = await getAllPlaylists(queryParams)
 
   if (result.code === 0) {
-    recommendedPlaylist.value = result.data.items as RecommendedPlay[]
+    playlist.value = result.data.items as RecommendedPlay[]
     pageConfig.total = result.data.total
   } else {
     ElMessage.error('获取歌单失败')
+  }
+}
+// 类别搜索事件
+// const handleSelect = async (category: string) => {
+//   // 会有搜索条件 queryParams 需要重置参数
+//   queryParams.value = {
+//     pageNum: currentPage.value,
+//     pageSize: pageSize.value,
+//     // 歌单标题
+//     title: styleTags.find((ca) => ca.name === category)?.name,
+//     // 歌单风格
+//     style: null,
+//   }
+//   // 重新查询歌手信息列表
+//   await getPlayList(queryParams.value)
+// }
+// 或
+const handleSelectTag = async () => {
+  queryParams.value.style = styleTag.value === '全部' ? null : styleTag.value
+  queryParams.value.pageNum = 1
+  await getPlayList(queryParams.value)
+}
+
+// 切换页签事件
+const handleSwitchTab = async (name: any) => {
+  // ElMessage.info(name.label)
+  // console.log(name.props.label)
+  // 当前页签名称
+  
+  const currentTab = name.props.label
+  if (currentTab === '我的收藏') {
+    const result = await getFavoritePlaylists(queryParams.value)
+    if (result.code === 0) {
+      playlist.value = result.data.items as RecommendedPlay[]
+      pageConfig.total = result.data.total
+    } else {
+      ElMessage.error('获取歌单失败')
+    }
+  } else {
+    await getPlayList(queryParams.value)
   }
 }
 
@@ -121,28 +171,39 @@ onMounted(async () => {
         :prefix-icon="Search"
       />
       <!-- 下拉框 -->
-      <el-select class="w-1/5 mr-4" v-model="selectedList">
+      <el-select
+        @change="handleSelectTag"
+        class="w-1/5 mr-4"
+        v-model="styleTag"
+      >
         <el-option
           v-for="style in styleTags"
           :key="style.name"
           :label="style.name"
           :value="style.name"
-        />
+        >
+        </el-option>
       </el-select>
     </div>
 
     <!-- 页签 或者 导航栏 -->
-    <div class="flex">
-      <el-tabs type="border-card" class="w-full overflow-auto">
+    <!-- 权重布局 flex-1 让元素占整个父容器的全部空间 -->
+    <div class="flex flex-1">
+      <el-tabs
+        type="border-card"
+        class="w-full overflow-auto"
+        @tab-click="handleSwitchTab"
+      >
         <el-tab-pane v-for="item in playListType" :key="item" :label="item">
           <div class="grid grid-cols-3 md:grid-cols-5 gap-4 mt-3">
             <div
               class="rounded-2xl transition duration-300 bg-card cursor-pointer hover:shadow-lg hover:bg-background"
-              v-for="item in recommendedPlaylist"
+              v-for="item in playlist"
               :key="item.playlistId"
+              @click="router.push('/playlist/'+item.playlistId)"
             >
               <!-- 卡片容器 -->
-              <div class="p-0">
+              <div class="flex flex-col p-0">
                 <div class="relative">
                   <!-- 歌单封面 -->
                   <el-image
@@ -167,7 +228,7 @@ onMounted(async () => {
                 </div>
 
                 <!-- 歌单名字 -->
-                <div class="flex p-2">
+                <div class="flex h-16 p-2">
                   <h3 class="line=clamp-2 font-medium playlist-title">
                     {{ item.title }}
                   </h3>

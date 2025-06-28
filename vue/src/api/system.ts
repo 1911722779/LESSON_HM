@@ -138,7 +138,7 @@ export const cancelCollectSong = (songId: number) => {
 
 /** 获取用户收藏的歌单 */
 export const getFavoritePlaylists = (data: object) => {
-  return http<Result>('post', '/favorite/getFavoritePlaylists', { data })
+  return http<ResultTable>('post', '/favorite/getFavoritePlaylists', { data })
 }
 
 /** 收藏歌单 */

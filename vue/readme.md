@@ -97,3 +97,16 @@ export const getRecommendedPlaylists = () => {
   return http<Result>('get', '/playlist/getRecommendedPlaylists')
 }
 ```
+
+## 6.28 
+搜索可以分为前端过滤搜索 以及后端接口搜索
+1. 前端过滤搜索 
+   优点： 节省服务器资源 降低服务器的压力 
+   缺点： 在大业务场景下 容易出现数据不一致 实现起来比较麻烦
+2. 后台接口搜索
+   优点： 数据一致性比较强 实现起来比较简单
+
+路由跳转页面 传递了歌单的ID到对应的页面
+如何在对应的页面获取到上一个页面路由传递过来的参数呢
+
+router 路由 发送数据，也可以接收数据
