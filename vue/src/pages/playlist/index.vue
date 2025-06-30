@@ -135,7 +135,7 @@ const handleSwitchTab = async (name: any) => {
   // ElMessage.info(name.label)
   // console.log(name.props.label)
   // 当前页签名称
-  
+
   const currentTab = name.props.label
   if (currentTab === '我的收藏') {
     const result = await getFavoritePlaylists(queryParams.value)
@@ -200,7 +200,7 @@ onMounted(async () => {
               class="rounded-2xl transition duration-300 bg-card cursor-pointer hover:shadow-lg hover:bg-background"
               v-for="item in playlist"
               :key="item.playlistId"
-              @click="router.push('/playlist/'+item.playlistId)"
+              @click="router.push('/playlist/' + item.playlistId)"
             >
               <!-- 卡片容器 -->
               <div class="flex flex-col p-0">

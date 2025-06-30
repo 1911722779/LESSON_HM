@@ -3,7 +3,12 @@
 import { User, VideoPlay } from '@element-plus/icons-vue'
 import defaultCoverImg from '@/assets/song.jpg'
 import defaultAvatar from '@/assets/user.jpg'
-import { getPlaylistDetail } from '@/api/system'
+import {
+  addPlaylistComment,
+  cancelLikeComment,
+  getPlaylistDetail,
+  likeComment,
+} from '@/api/system'
 import { ElMessage } from 'element-plus'
 import {
   PlaylistComment,
@@ -12,6 +17,8 @@ import {
 } from '@/api/interface'
 import { isMobile } from '@/utils'
 import { useFavoriteStore } from '@/stores/modules/favorite'
+import { get } from 'http'
+import { isEnumMember } from 'typescript'
 
 // 导入用户缓存
 const userStore = UserStore()
@@ -51,15 +58,59 @@ const activeName = ref('歌曲列表')
 // 默认规则最热
 const isActive = ref('hot')
 
-// 查询参数
-const queryParams = ref({
-  pageNum: currentPage.value,
-  pageSize: pageSize.value,
-  // 歌单标题
-  title: null,
-  // 歌单风格
-  style: null,
-})
+// 评论
+const commentContent = ref('')
+
+// 登录组件
+const showLogin = ref(false)
+
+// 发布评论
+const handleAddComment = async () => {
+  // 1. 校验用户是否登录
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  // 2. 校验内容是否为空值
+  if (!commentContent.value.trim()) {
+    ElMessage.warning('请输入评论内容')
+  }
+  // 3. 发布评论 需要知道发布的内容是对应哪个歌单
+  // 需要获取歌单id 评论内容
+  const playlistId = playlistDetail.value.playlistId
+  const result = await addPlaylistComment({
+    playlistId,
+    content: commentContent.value.trim(),
+  })
+
+  if (result.code === 0) {
+    ElMessage.success('评论发布成功')
+    // 重新获取歌单详情以更新评论列表
+    await getDetail(Number(playlistId))
+  } else {
+    ElMessage.error('评论发布失败')
+  }
+}
+
+// 点赞与取消点赞
+const handleLike = async (comment: PlaylistComment) => {
+  // 1. 判断用户是否登录
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  // 2. 点赞/取消赞
+  // 2.1 判断当前评论是否已经是点赞状态 是取消赞 不是点赞
+  const result = comment.liked
+    ? await cancelLikeComment(comment.commentId)
+    : await likeComment(comment.commentId)
+  if (result.code === 0) {
+    ElMessage.success('点赞成功')
+    await getDetail(Number(playlistDetail.value.playlistId))
+  } else {
+    ElMessage.error('取消点赞')
+  }
+}
 
 // 切换页签事件
 const handleSwitchTab = async (name: any) => {
@@ -155,8 +206,19 @@ const handleSort = (type: string) => {
 
 // 组件创建生命周期函数 初始化数据 获取数据等
 onMounted(async () => {
-  // 获取上一个页面传递过来的参数 只获取一次
+  emitter.on('show-login-dialog', showLoginDialog)
 })
+
+// 组件卸载之前生命周期
+onBeforeUnmount(() => {
+  // 解绑 登录事件总线方法
+  emitter.off('show-login-dialog', showLoginDialog)
+})
+
+// 调用登录组件
+const showLoginDialog = () => {
+  emitter.emit('show-login-dialog', { show: true })
+}
 
 // 监听函数 watch 动态监听 只要有参数变化 就会监听变换过程
 /**
@@ -310,6 +372,57 @@ watch(
               </button>
             </div>
 
+            <!-- 评论功能 是需要已经登录才可以评论 没有登录需要提示用户登录 -->
+            <div class="flex flex-row gap-x-2">
+              <!-- 当前用户头像信息 -->
+              <el-avatar
+                class="w-12 h-12"
+                :src="userStore.userInfo.avatarUrl || defaultAvatar"
+              ></el-avatar>
+
+              <!-- 列布局 输入框以及发布按钮 -->
+              <div
+                class="flex flex-1 flex-col gap-y-3"
+                v-if="userStore.isLoggedIn"
+              >
+                <!-- 输入框 -->
+                <el-input
+                  v-model="commentContent"
+                  maxlength="200"
+                  rows="3"
+                  show-word-limit
+                  placeholder="快来发布你的评论吧~"
+                  type="textarea"
+                />
+
+                <div class="flex flex-row justify-end">
+                  <!-- 发布按钮 无内容时 置灰 :disabled="" -->
+                  <el-button
+                    @click="handleAddComment"
+                    :disabled="!commentContent.trim()"
+                    class="w-20 bg-blue-500"
+                    type="primary"
+                    >发布</el-button
+                  >
+                </div>
+              </div>
+              <!-- 未登录的情况 -->
+              <div
+                class="flex flex-1 gap-y-3 bg-gray-200 justify-center items-center rounded-lg h-14 text-gray-400"
+                v-else
+              >
+                <span>请</span>
+                <el-button
+                  @click="showLoginDialog"
+                  type="primary"
+                  size="small"
+                  class="w-14"
+                  >登录</el-button
+                >
+                <span>后发布评论喵(๑˃̵ᴗ˂)</span>
+              </div>
+            </div>
+
             <!-- 列表渲染 -->
             <div
               class="flex flex-col mt-3"
@@ -335,10 +448,15 @@ watch(
                     <span class="text-gray-400">{{ comment.createTime }}</span>
                     <!-- 点赞数 图标+点赞总数 如果是自己的评论，显示删除按钮 -->
                     <button
+                      @click="handleLike(comment)"
                       class="flex hover:text-blue-400 text-gray-400 items-center justify-center mx-2"
                     >
                       <!-- 点赞图标 -->
-                      <icon-material-symbols:thumb-up />
+                      <icon-material-symbols:thumb-up
+                        :class="[
+                          comment.liked ? 'text-blue-400' : 'text-gray-400',
+                        ]"
+                      />
                       <span class="text-gray-400 mx-1">{{
                         comment.likeCount
                       }}</span>

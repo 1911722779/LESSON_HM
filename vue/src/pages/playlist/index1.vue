@@ -91,7 +91,6 @@ const musicStyles = [
 
 // 获取精选歌单
 const getRecommendData = async () => {
-  
   // 发送网络请求 获取推荐歌单
   const result = await getRecommendedPlaylists()
   // 判断成功与否 还需要判断一下是否是数组类型
@@ -218,8 +217,10 @@ onMounted(async () => {
             grid-cols-3 默认3个
             gap-4 间距4
           -->
-      <div v-if="activeTab === 'recommended'" 
-        class="grid grid-cols-4 md:grid-cols-5 gap-4 mt-3">
+      <div
+        v-if="activeTab === 'recommended'"
+        class="grid grid-cols-4 md:grid-cols-5 gap-4 mt-3"
+      >
         <!-- 
                 rounded-2xl 圆角
                 transition
@@ -257,25 +258,27 @@ onMounted(async () => {
       </div>
 
       <!-- 我的收藏歌单 内容 -->
-      <div v-if="activeTab === 'favorite'" 
-        class="text-center py-8 text-gray-500">
+      <div
+        v-if="activeTab === 'favorite'"
+        class="text-center py-8 text-gray-500"
+      >
         <el-empty description="您还没有收藏歌单" />
       </div>
     </div>
 
     <!-- 分页组件 -->
-      <nav
-        v-if="!isMobile()"
-        class="flex w-full justify-center mt-3 mx-auto mb-3"
-      >
-        <!-- current-page 当前页 page-size 每页多少条 total 总条数 sizi-change 每页显示多少条事件 -->
-        <el-pagination
-          v-bind="pageConfig"
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          @change="handleChange"
-        />
-      </nav>
+    <nav
+      v-if="!isMobile()"
+      class="flex w-full justify-center mt-3 mx-auto mb-3"
+    >
+      <!-- current-page 当前页 page-size 每页多少条 total 总条数 sizi-change 每页显示多少条事件 -->
+      <el-pagination
+        v-bind="pageConfig"
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        @change="handleChange"
+      />
+    </nav>
   </div>
 </template>
 
@@ -283,6 +286,5 @@ onMounted(async () => {
 :deep(.el-input__wrapper) {
   border-radius: 10px;
 }
-
 </style>
 
