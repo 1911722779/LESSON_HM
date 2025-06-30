@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script>
+    // 1. 生成随机数
+    function getRandom(N, M) {
+      return Math.floor(Math.random() * (M - N + 1)) + N
+    }
+    let num = getRandom(1, 10)
+    console.log(num)
+    // 3. 判断
+    // while (true) {
+    //   // 2. 用户输入
+    //   let input = +prompt('请输入一个数字:')
+    //   if (input > num) {
+    //     alert('猜大了')
+    //   } else if (input < num) {
+    //     alert('猜小了')
+    //   } else {
+    //     alert('猜对了')
+    //     break
+    //   }
+    // }
+    let flag = true
+    for (let i = 0; i < 3; i++) {
+      // 2. 用户输入
+      let input = +prompt('请输入一个数字:')
+      if (input > num) {
+        alert('猜大了,你还有' + (3 - i) + '次机会')
+      } else if (input < num) {
+        alert('猜小了,你还有' + (3 - i) + '次机会')
+      } else {
+        flag = false
+        alert('猜对了')
+        break
+      }
+    }
+    if(flag){
+      alert('你输了')
+    }
+
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    let names = ['张三','李四','王五','赵六','钱七','孙八','周九','吴十','郑十一','王十二']
+    // 1. 得到一个随机数，作为数组的索引号，这个随机数的范围是0~names.length
+    let index = Math.floor(Math.random() * names.length)
+    // document.write(names[index]);
+    // 2. 随机显示但不允许重复知道显示所有名称
+    for(let i = 0; i < (names.length+9); i++){
+      index = Math.floor(Math.random() * names.length)
+      document.write(names[index] + '<br>')
+      names.splice(index,1)    
+    }
+
+
+  </script>
+</body>
+</html>
