@@ -29,7 +29,7 @@ const props = defineProps({
 
 const dataRef = toRef(props, 'data')
 // 创建本地副本
-const localData: any[] = reactive([])
+const localData = ref<any[]>([])
 
 //无限翻页 自增
 const count = ref(0)
@@ -61,12 +61,12 @@ interface PageResult {
 // 播放音乐
 const handlePlay = async (row: Song) => {
   // 先将所有表格数据转换为 trackModel
-  const allTracks = localData
+  const allTracks = localData.value
     .map((song) => convertToTrackModel(song))
     .filter((track) => track !== null)
 
   // 找到当前选中歌曲的索引
-  const selectedIndex = localData.findIndex(
+  const selectedIndex = localData.value.findIndex(
     (song) => song.songId === row.songId
   )
 
@@ -101,7 +101,7 @@ const updateAllSongLikeStatus = (songId: number, status: number) => {
 
   // 更新原始数据
   if (localData) {
-    const song = localData.find((song) => song.songId === songId)
+    const song = localData.value.find((song) => song.songId === songId)
     if (song) {
       song.likeStatus = status
     }
@@ -158,7 +158,7 @@ const loadData = async () => {
         pageSize: 20,
       }).then((res) => {
         if (res.code === 0 && res.data) {
-          localData.push(...res.data.items)
+          localData.value.push(...res.data.items)
         }
       })
       break
@@ -173,7 +173,7 @@ const loadData = async () => {
       })
       if (res.code === 0 && res.data) {
         const pageData = res.data as PageResult
-        localData.push(...pageData.items)
+        localData.value.push(...pageData.items)
         // playlist.value.trackCount = pageData.total
       }
       break
@@ -183,12 +183,13 @@ const loadData = async () => {
 
 onMounted(() => {
   loadData()
-  localData.push(...dataRef.value)
+
+  localData.value = dataRef.value
 })
 
 // 观察数据变化
 watch(dataRef, (newData) => {
-  localData.push(...newData)
+  localData.value=newData
 })
 </script>
 
@@ -197,30 +198,20 @@ watch(dataRef, (newData) => {
     <li class="infinite-list-item">
       <!--    移动端适配-->
       <div class="space-y-2">
-        <div
-          v-for="row in localData"
-          :key="row.songId"
+        <div v-for="row in localData" :key="row.songId"
           class="flex items-center gap-3 p-2 rounded-xl transition duration-300 cursor-pointer hover:bg-[hsl(var(--hover-menu-bg))]"
           :class="[
             isCurrentPlaying(row.songId)
               ? 'bg-[hsl(var(--hover-menu-bg))]'
               : 'hover:bg-[hsl(var(--hover-menu-bg))]',
             'cursor-pointer',
-          ]"
-          @click="handlePlay(row)"
-        >
+          ]" @click="handlePlay(row)">
           <!-- 歌曲图片 -->
           <div class="relative w-14 h-14 shrink-0">
-            <el-image
-              :src="row.coverUrl"
-              fit="cover"
-              lazy
-              class="rounded-md w-full h-full"
-            />
+            <el-image :src="row.coverUrl" fit="cover" lazy class="rounded-md w-full h-full" />
             <!-- 播放图标覆盖 -->
             <div
-              class="absolute inset-0 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 bg-black/40 rounded-md transition-opacity"
-            >
+              class="absolute inset-0 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 bg-black/40 rounded-md transition-opacity">
               <icon-tabler:player-play-filled class="text-xl" />
             </div>
           </div>
@@ -236,10 +227,7 @@ watch(dataRef, (newData) => {
           <!-- 喜欢图标 -->
           <div v-show="page == 'library'" class="ml-auto">
             <el-button text circle @click.stop="handleLike(row, $event)">
-              <icon-mdi:cards-heart-outline
-                v-if="!userStore.isLoggedIn || row.likeStatus === 0"
-                class="text-xl"
-              />
+              <icon-mdi:cards-heart-outline v-if="!userStore.isLoggedIn || row.likeStatus === 0" class="text-xl" />
               <icon-mdi:cards-heart v-else class="text-xl text-red-500" />
             </el-button>
           </div>

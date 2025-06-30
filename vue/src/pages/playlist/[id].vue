@@ -1,12 +1,22 @@
 <script setup lang="ts">
 // ElementUI icon库
-import { VideoPlay } from '@element-plus/icons-vue'
+import { User, VideoPlay } from '@element-plus/icons-vue'
 import defaultCoverImg from '@/assets/song.jpg'
+import defaultAvatar from '@/assets/user.jpg'
 import { getPlaylistDetail } from '@/api/system'
 import { ElMessage } from 'element-plus'
-import { PlaylistDetail, RecommendedPlay } from '@/api/interface'
+import {
+  PlaylistComment,
+  PlaylistDetail,
+  RecommendedPlay,
+} from '@/api/interface'
 import { isMobile } from '@/utils'
 import { useFavoriteStore } from '@/stores/modules/favorite'
+
+// 导入用户缓存
+const userStore = UserStore()
+// 获取用户名
+const currentUsername = computed(() => userStore.userInfo?.username || '')
 
 // 导入收藏Store
 const favoriteStore = useFavoriteStore()
@@ -34,6 +44,12 @@ const playListType = ref(['歌单', '评论'])
 const currentPage = ref(1)
 // 每页显示多少条
 const pageSize = ref(10)
+
+// 默认激活页签
+const activeName = ref('歌曲列表')
+
+// 默认规则最热
+const isActive = ref('hot')
 
 // 查询参数
 const queryParams = ref({
@@ -117,6 +133,26 @@ const handlePlayAll = async () => {
   play()
 }
 
+// 评论列表排序
+const handleSort = (type: string) => {
+  // 取出评论 作为临时变量排序用
+  const tempComments = playlistDetail?.value.comments as PlaylistComment[]
+  if (type === 'hot') {
+    isActive.value = 'hot'
+    // 最热排序 根据点赞数排序
+    playlistDetail.value.comments = tempComments?.sort((a, b) => {
+      return b.likeCount - a.likeCount
+    })
+  } else {
+    isActive.value = 'new'
+    // 最新排序 根据评论时间排序 2025-01-26 ==> 时间毫秒值 数值型
+    // 比较器返回值 > 0 b比a大 =0 两数相等 < 0 b比a小
+    playlistDetail.value.comments = tempComments?.sort((a, b) => {
+      return new Date(b.createTime).getTime() - new Date(a.createTime).getTime()
+    })
+  }
+}
+
 // 组件创建生命周期函数 初始化数据 获取数据等
 onMounted(async () => {
   // 获取上一个页面传递过来的参数 只获取一次
@@ -134,16 +170,9 @@ watch(
     // console.log(id)
     // 获取歌单详情信息
     if (id) {
-      const result = await getPlaylistDetail(Number(id))
-      if (result.code === 0) {
-        // 歌单详情 携带 评论列表 以及 歌单附属歌曲列表
-        // console.log(result.data)
-        playlistDetail.value = result.data as PlaylistDetail
-        console.log(playlistDetail.value.songs)
-        songs.push(...playlistDetail.value.songs)
-      } else {
-        ElMessage.error('获取歌单详情失败')
-      }
+      // 手动激活歌曲列表页签
+      activeName.value = '歌曲列表'
+      await getDetail(Number(id))
     }
   },
   {
@@ -172,7 +201,7 @@ watch(
       </el-image>
 
       <!-- 右边是 歌单的详细信息 歌单名称 歌单简介 歌单创建人 歌单数量 -->
-      <div class="flex flex-col justify-between  mx-1 md:mx-4 mt-2">
+      <div class="flex flex-col justify-between mx-1 md:mx-4 mt-2">
         <!-- 歌单信息 列布局 -->
         <div class="flex flex-col gap-y-4">
           <!-- 歌单名称 -->
@@ -197,7 +226,7 @@ watch(
             <!-- 歌单创建人 名字 -->
             <span>Jar Music</span>
             <!-- 歌单歌曲数量 xx首歌曲 -->
-            <span>{{ playlistDetail?.songs.length }}</span>
+            <span class="mx-4">{{ playlistDetail?.songs.length }}首歌曲</span>
           </div>
         </div>
 
@@ -233,7 +262,7 @@ watch(
     <!--页签 歌曲和评论 -->
     <div class="flex flex-1">
       <el-tabs
-        :type="isMobile?'':'border-card'"
+        :type="isMobile ? '' : 'border-card'"
         class="w-full overflow-auto"
         @tab-click="handleSwitchTab"
       >
@@ -243,7 +272,96 @@ watch(
           <MobileList v-else :data="playlistDetail?.songs"> </MobileList>
         </el-tab-pane>
 
-        <el-tab-pane label="歌单评论"> </el-tab-pane>
+        <el-tab-pane label="歌单评论">
+          <!-- 评论字段 comments 在查询个单的时候 携带数组
+            {
+              "commentId": 0,
+              "username": "string",
+              "userAvatar": "string",
+              "content": "string",
+              "createTime": "string",
+              "likeCount": 0,
+              "liked": null
+            } 
+          -->
+          <!-- 评论功能 -->
+          <!-- 评论列表 -->
+          <div class="flex flex-col my-4">
+            <div class="flex flex-row gap-x-3 mx-2 mb-2">
+              <!-- 显示评论总数 -->
+              <h3 class="font-bold mr-4">
+                评论总数：{{ playlistDetail?.comments.length ?? 0 }}
+              </h3>
+              <!-- 评论排序规则 -->
+              <button
+                :class="[isActive === 'hot' ? 'text-black' : '']"
+                @click="handleSort('hot')"
+                class="flex hover:text-blue-400 text-gray-500 items-center justify-center"
+              >
+                最热
+              </button>
+              <span> | </span>
+              <button
+                :class="[isActive === 'new' ? 'text-black' : '']"
+                @click="handleSort('new')"
+                class="flex hover:text-blue-400 text-gray-500 items-center justify-center"
+              >
+                最新
+              </button>
+            </div>
+
+            <!-- 列表渲染 -->
+            <div
+              class="flex flex-col mt-3"
+              v-for="comment in playlistDetail?.comments"
+              :key="comment.commentId"
+            >
+              <div class="flex flex-row">
+                <!-- 行布局 头像在左边 个人信息以及评论在右边 -->
+                <div>
+                  <el-image
+                    class="w-12 h-12 rounded-full object-center"
+                    :src="comment.userAvatar || defaultAvatar"
+                  ></el-image>
+                </div>
+                <!-- 评论信息部分 -->
+                <div class="flex flex-1 flex-col gap-y-4">
+                  <!-- 评论人 -->
+                  <span class="text-pink-400">{{ comment.username }}</span>
+                  <!-- 评论内容 -->
+                  <p>{{ comment.content }}</p>
+                  <!-- 评论时间与点赞数 -->
+                  <div class="flex flex-row">
+                    <span class="text-gray-400">{{ comment.createTime }}</span>
+                    <!-- 点赞数 图标+点赞总数 如果是自己的评论，显示删除按钮 -->
+                    <button
+                      class="flex hover:text-blue-400 text-gray-400 items-center justify-center mx-2"
+                    >
+                      <!-- 点赞图标 -->
+                      <icon-material-symbols:thumb-up />
+                      <span class="text-gray-400 mx-1">{{
+                        comment.likeCount
+                      }}</span>
+                    </button>
+
+                    <!-- 删除评论功能 -->
+                    <button
+                      class="flex items-center justify-center"
+                      v-if="comment.username === currentUsername"
+                    >
+                      <!-- 删除图标 -->
+                      <icon-material-symbols:delete-outline />
+                      <span>删除</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 分割线 -->
+              <el-divider />
+            </div>
+          </div>
+        </el-tab-pane>
       </el-tabs>
     </div>
   </div>
