@@ -6,19 +6,15 @@ import defaultAvatar from '@/assets/user.jpg'
 import {
   addPlaylistComment,
   cancelLikeComment,
+  deleteComment,
   getPlaylistDetail,
   likeComment,
 } from '@/api/system'
-import { ElMessage } from 'element-plus'
-import {
-  PlaylistComment,
-  PlaylistDetail,
-  RecommendedPlay,
-} from '@/api/interface'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { PlaylistComment, PlaylistDetail } from '@/api/interface'
 import { isMobile } from '@/utils'
 import { useFavoriteStore } from '@/stores/modules/favorite'
-import { get } from 'http'
-import { isEnumMember } from 'typescript'
+import 'emoji-picker-element'
 
 // 导入用户缓存
 const userStore = UserStore()
@@ -44,9 +40,6 @@ const playlistDetail = ref()
 // 歌曲列表
 const songs = reactive([])
 
-// 歌单页签数组
-const playListType = ref(['歌单', '评论'])
-
 // 当前页
 const currentPage = ref(1)
 // 每页显示多少条
@@ -61,8 +54,39 @@ const isActive = ref('hot')
 // 评论
 const commentContent = ref('')
 
-// 登录组件
-const showLogin = ref(false)
+// 评论输入框引用
+const inputRef = ref()
+
+// 评论选择表情事件
+const handleEmoji = (event: any) => {
+  // 打印选择的表情
+  console.log(event.detail.unicode)
+  // 1. 尾部追加表情 会导致二次输入
+  // commentContent.value += event.detail.unicode
+  // 2. 光标处追加表情
+  const input = inputRef.value?.$el.querySelector('textarea')
+  // console.log(input)
+  // 如果这个元素为空 返回
+  if (!input) return
+
+  // 获取光标位置
+  const start = input.selectionStart
+  const end = input.selectionEnd
+  // 内容拼接
+  const tempComment = commentContent.value
+  // 截取评论内容的前半部分 + 表情 + 后半部分
+  commentContent.value =
+    tempComment.substring(0, start) + event.detail.unicode + tempComment.substring(end)
+  console.log('最后内容' + commentContent.value)
+  // 重置光标
+  nextTick(() => {
+    // 5.1 重新聚焦
+    input.focus()
+    // 5.2 重置光标到文本最后
+    const len = start + event.detail.unicode.length
+    input.setSelectionRange(len, len)
+  })
+}
 
 // 发布评论
 const handleAddComment = async () => {
@@ -74,6 +98,7 @@ const handleAddComment = async () => {
   // 2. 校验内容是否为空值
   if (!commentContent.value.trim()) {
     ElMessage.warning('请输入评论内容')
+    return
   }
   // 3. 发布评论 需要知道发布的内容是对应哪个歌单
   // 需要获取歌单id 评论内容
@@ -84,12 +109,46 @@ const handleAddComment = async () => {
   })
 
   if (result.code === 0) {
+    // 评论发布成功之后清空输入框
+    commentContent.value = ''
     ElMessage.success('评论发布成功')
     // 重新获取歌单详情以更新评论列表
     await getDetail(Number(playlistId))
   } else {
     ElMessage.error('评论发布失败')
   }
+}
+
+// 删除评论
+const handleDeleteComment = async (comment: PlaylistComment) => {
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+
+  ElMessageBox.confirm('真的要删除这条评论吗?', 'Warning', {
+    confirmButtonText: '确认删除',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(async () => {
+      // 调用删除接口 删除评论 严格来说互联网基本没有彻底删除 一般都是逻辑删除 软删除
+      const result = await deleteComment(comment.commentId)
+      if (result.code === 0) {
+        ElMessage.success('删除成功')
+      } else {
+        ElMessage.error(result.message ?? '删除失败')
+      }
+
+      await getDetail(Number(playlistDetail.value.playlistId))
+    })
+    .catch(() => {
+      // 取消后执行的逻辑
+      // ElMessage({
+      //   type: 'info',
+      //   message: '取消',
+      // })
+    })
 }
 
 // 点赞与取消点赞
@@ -297,7 +356,7 @@ watch(
           <!-- 左侧是 播放全部按钮 带图标 -->
           <button
             @click="handlePlayAll"
-            class="bg-blue-400 text-white rounded-lg p-3 inline-flex items-center gap-x-2 w-48 justify-center"
+            class="bg-blue-400 text-white rounded-lg py-3 px-4 flex items-center justify-center gap-2 w-48"
           >
             <!-- VideoPlay图标 -->
             <el-icon size="30">
@@ -346,7 +405,7 @@ watch(
               "liked": null
             } 
           -->
-          <!-- 评论功能 -->
+
           <!-- 评论列表 -->
           <div class="flex flex-col my-4">
             <div class="flex flex-row gap-x-3 mx-2 mb-2">
@@ -356,17 +415,21 @@ watch(
               </h3>
               <!-- 评论排序规则 -->
               <button
-                :class="[isActive === 'hot' ? 'text-black' : '']"
+                :class="[
+                  isActive === 'hot' ? 'text-blue-500' : 'text-gray-500',
+                ]"
                 @click="handleSort('hot')"
-                class="flex hover:text-blue-400 text-gray-500 items-center justify-center"
+                class="flex hover:text-blue-400 items-center justify-center"
               >
                 最热
               </button>
               <span> | </span>
               <button
-                :class="[isActive === 'new' ? 'text-black' : '']"
+                :class="[
+                  isActive === 'new' ? 'text-blue-500' : 'text-gray-500',
+                ]"
                 @click="handleSort('new')"
-                class="flex hover:text-blue-400 text-gray-500 items-center justify-center"
+                class="flex hover:text-blue-400 items-center justify-center"
               >
                 最新
               </button>
@@ -387,6 +450,7 @@ watch(
               >
                 <!-- 输入框 -->
                 <el-input
+                  ref="inputRef"
                   v-model="commentContent"
                   maxlength="200"
                   rows="3"
@@ -394,8 +458,21 @@ watch(
                   placeholder="快来发布你的评论吧~"
                   type="textarea"
                 />
+                <!-- 评论功能栏 两端对齐 -->
+                <div class="flex flex-row justify-between">
+                  <!-- 表情容器 -->
+                  <el-popover width="348" placement="bottom" trigger="click">
+                    <template #reference>
+                      <!-- 图标 -->
+                      <icon-mdi:emoji-outline />
+                    </template>
+                    <!-- 表情组件 -->
+                    <emoji-picker
+                      @emoji-click="handleEmoji"
+                      class="flex w-80"
+                    ></emoji-picker>
+                  </el-popover>
 
-                <div class="flex flex-row justify-end">
                   <!-- 发布按钮 无内容时 置灰 :disabled="" -->
                   <el-button
                     @click="handleAddComment"
@@ -466,6 +543,7 @@ watch(
                     <button
                       class="flex items-center justify-center"
                       v-if="comment.username === currentUsername"
+                      @click="handleDeleteComment(comment)"
                     >
                       <!-- 删除图标 -->
                       <icon-material-symbols:delete-outline />

@@ -62,6 +62,19 @@ const getRecommendData = async () => {
   }
 }
 
+const isRotate = ref(false)
+
+// 定义旋转函数
+const handleRotate = async() => {
+  isRotate.value = true
+  // 延迟 设置为false
+  setTimeout(() => {
+    isRotate.value = false
+  }, 500)
+  // 刷新推荐歌曲
+  await getSongList()
+}
+
 // 获取歌曲列表
 const getSongList = async () => {
   // 1. 发送网络请求到后台 获取相似歌曲列表
@@ -170,6 +183,7 @@ onMounted(async () => {
               class="rounded-2xl transition duration-300 bg-card cursor-pointer"
               v-for="item in recommendedPlaylist"
               :key="item.playlistId"
+              @click="router.push('/playlist/' + item.playlistId)"
             >
               <div class="p-0">
                 <!-- 歌单封面 -->
@@ -206,10 +220,16 @@ onMounted(async () => {
              items-center 元素居中
             -->
             <button
+              @click="handleRotate"
               class="inline-flex items-center justify-center gap-2 text-sm text-gray-500"
             >
-              <!-- 左侧图标 -->
-              <icon-tabler:refresh class="text-lg" />
+              <!-- 左侧图标 刷新图标旋转特效 -->
+              <icon-tabler:refresh
+                :class="[
+                  'text-lg transition-transform duration-500',
+                  isRotate ? 'rotate-180' : 'rotate-0',
+                ]"
+              />
               刷新
             </button>
           </div>

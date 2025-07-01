@@ -27,6 +27,7 @@
     "artplayer": "^5.2.2",
     "axios": "^1.7.9",
     "element-plus": "^2.9.3",
+    "emoji-picker-element": "^1.26.3",
     "js-cookie": "^3.0.5",
     "mitt": "^3.0.1",
     "nprogress": "^0.2.0",

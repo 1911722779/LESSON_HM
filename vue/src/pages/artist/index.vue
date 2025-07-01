@@ -9,6 +9,7 @@ import { onMounted, ref } from 'vue'
 import { isMobile } from '@/utils'
 import { get } from 'http'
 import { tagEmits } from 'element-plus'
+import router from '@/routers'
 
 // 当前页
 const currentPage = ref(1)
@@ -128,7 +129,7 @@ const handleSelect = async (category: string | number) => {
   }
 
   // 如果是数值型 说明是性别搜索
-  if (typeof category === "number") {
+  if (typeof category === 'number') {
     queryParams.value.gender = category?.toString() || ''
     // 添加之前清空
     tags1.value = []
@@ -209,7 +210,7 @@ onMounted(async () => {
             {{ tag.label }}
           </el-tag>
 
-                    <el-tag
+          <el-tag
             class="w-18"
             v-for="tag in tags2"
             :key="tag.uid"
@@ -269,6 +270,7 @@ onMounted(async () => {
           class="group relative rounded-full text-card-foreground shadow-md hover:shadow-xl"
           v-for="item in artisList"
           :key="item.artistId"
+          @click="router.push('/artist/' + item.artistId)"
         >
           <el-image
             lazy

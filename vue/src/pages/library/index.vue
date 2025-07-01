@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { Search,Refresh } from '@element-plus/icons-vue'
 import { getAllSongs } from '@/api/system'
 import { isMobile } from '@/utils'
+import { FormInstance } from 'element-plus'
 
 // 本地歌曲列表缓存 负责减少服务器渲染压力
 const libraryStore = useLibraryStore()
@@ -25,6 +27,16 @@ const pageConfig = reactive({
   pageSizes: [15, 30, 45],
 })
 
+// 查询参数表单
+const queryParams = reactive({
+  // 歌曲名称
+  songName: null,
+  // 歌手名称
+  artistName: null,
+  // 专辑名称
+  album: null,
+})
+
 // 每页显示条数的变更事件
 const handleSizeChange = async () => {}
 // 当前页码变更事件
@@ -45,6 +57,12 @@ const getAllSongData = async () => {
     pageNum: currentPage.value,
     // 每页多少条
     pageSize: pageSize.value,
+    // 歌曲名称
+    songName: queryParams.songName || null,
+    // 歌手名称
+    artistName: queryParams.artistName || null,
+    // 专辑名称
+    album: queryParams.album || null,
   })
 
   // 判断请求是否有效
@@ -57,6 +75,21 @@ const getAllSongData = async () => {
     pageConfig.total = result.data.total || 0
   }
 }
+// 提交查询表单
+const submitForm = async(formEl: FormInstance | undefined) => {
+  // 1. 携带条件查询数据
+  await getAllSongData()
+}
+// 重置表单
+const resetForm = async(formEl: FormInstance | undefined) => {
+  if (!formEl) return
+  formEl.resetFields()
+  await getAllSongData()
+}
+
+// 表单引用
+const formRef= ref<FormInstance>()
+
 onMounted(async () => {
   await getAllSongData()
 })
@@ -70,7 +103,43 @@ onMounted(async () => {
     h-full 高度100%
     overflow-hidden 溢出隐藏 
   -->
-  <div class="flex flex-col flex-1 h-full overflow-hidden">
+  <div class="flex flex-col flex-1 h-full overflow-hidden p-5">
+    <!-- 搜索功能栏 -->
+    <div class="flex flex-row mb-5 gap-x-2">
+      <el-form inline="true" :model="queryParams" size="large" ref="formRef">
+        <el-form-item label="歌曲名称" prop="songName">
+          <el-input
+            v-model="queryParams.songName"
+            class="w-48"
+            placeholder="请输入歌曲名称"
+            :prefix-icon="Search"
+          ></el-input>
+        </el-form-item>
+
+        <el-form-item label="歌手名称" prop="artistName">
+          <el-input
+            v-model="queryParams.artistName"
+            class="w-48"
+            placeholder="请输入歌手名称"
+            :prefix-icon="Search"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="专辑名称" prop="album">
+          <el-input
+            v-model="queryParams.album"
+            class="w-48"
+            placeholder="请输入专辑名称"
+            :prefix-icon="Search"
+          ></el-input>
+        </el-form-item>
+
+        <el-form-item>
+          <el-button type="primary" @click="submitForm(formRef)" :icon="Search">查询</el-button>
+          <el-button @click="resetForm(formRef)" :icon="Refresh">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+
     <!-- 曲库 实际就是一个表格
       表头 th
       表体 tbody

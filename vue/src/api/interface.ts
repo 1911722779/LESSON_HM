@@ -76,6 +76,18 @@ export interface SongDetail {
   comments: Comment[]
 }
 
+// 定义歌手详情类型
+export interface ArtistDetail {
+  artistId: number
+  artistName: string
+  gender: number
+  avatar: string
+  birth: string
+  area: string
+  introduction: string
+  songs: Song[]
+}
+
 // 定义推荐歌单结构类型
 export interface RecommendedPlay{
   playlistId:number,

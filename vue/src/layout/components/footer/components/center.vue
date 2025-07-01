@@ -162,7 +162,7 @@ const handleLike = async () => {
         class="w-full"
         size="small"
       />
-      <div v-show="!isMobile" class="flex items-center space-x-1">
+      <div v-show="!isMobile()" class="flex items-center space-x-1">
         <span class="text-xs">{{ formatTime(currentTime) }}</span>
         <span> / </span>
         <span class="text-xs">{{ formatTime(duration) }}</span>

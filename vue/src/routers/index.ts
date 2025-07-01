@@ -32,9 +32,15 @@ const router = createRouter({
     },
     {
       path: '/artist',
-      // 歌手
+      // 歌手列表页面路由
       component: () => import('@/pages/artist/index.vue'),
     },
+    {
+      path: '/artist/:id',
+      // 歌手详细
+      component: () => import('@/pages/artist/[id].vue'),
+    },
+
     {
       path: '/playlist',
       // 歌单
