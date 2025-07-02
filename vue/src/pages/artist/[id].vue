@@ -2,14 +2,11 @@
 // ElementUI icon库
 import { VideoPlay } from '@element-plus/icons-vue'
 import defaultCoverImg from '@/assets/song.jpg'
-import {
-  getArtistDetail,
-} from '@/api/system'
+import { getArtistDetail } from '@/api/system'
 import { ElMessage } from 'element-plus'
-import { ArtistDetail } from '@/api/interface'
+import { ArtistDetail, SongDetail } from '@/api/interface'
 import { isMobile } from '@/utils'
 import 'emoji-picker-element'
-
 
 // 导入播放器Store
 const audioStore = AudioStore()
@@ -31,6 +28,8 @@ const artistDetail = ref()
 // 默认激活页签
 const activeName = ref('歌曲列表')
 
+const songs = ref<SongDetail[]>([])
+
 // 切换页签事件
 const handleSwitchTab = async (name: any) => {
   // ElMessage.info(name.label)
@@ -47,6 +46,7 @@ const getDetail = async (id: number) => {
   const result = await getArtistDetail(id)
   if (result.code === 0) {
     artistDetail.value = result.data as ArtistDetail
+    songs.value = artistDetail.value.songs
   } else {
     ElMessage.error('获取歌单详情失败')
   }
@@ -90,7 +90,6 @@ const handlePlayAll = async () => {
   // 播放
   play()
 }
-
 
 // 组件创建生命周期函数 初始化数据 获取数据等
 onMounted(async () => {
@@ -164,7 +163,9 @@ watch(
             {{ artistDetail?.introduction }}
           </p>
           <!-- 歌单所属地区 -->
-          <span class="text-muted-foreground">地区： {{ artistDetail?.area }}</span>
+          <span class="text-muted-foreground"
+            >地区： {{ artistDetail?.area }}</span
+          >
           <!-- 歌手歌曲数量 xx首歌曲 -->
           <span class="mx-4 text-muted-foreground"
             >{{ artistDetail?.songs.length }} 首歌曲</span
@@ -190,18 +191,21 @@ watch(
 
     <!--页签 歌曲和评论 -->
     <div class="flex flex-1">
-      <el-tabs
+      <!-- PC端显示的曲库组件 -->
+      <Table v-if="!isMobile()" :data="artistDetail?.songs"> </Table>
+      <MobileList v-else :data="artistDetail?.songs"> </MobileList>
+      <!-- <el-tabs
         :type="isMobile ? '' : 'border-card'"
         class="w-full overflow-auto"
         @tab-click="handleSwitchTab"
-      >
-        <el-tab-pane label="歌曲列表">
-          <!-- PC端显示的曲库组件 -->
-          <Table v-if="!isMobile()" :data="artistDetail?.songs"> </Table>
-          <MobileList v-else :data="artistDetail?.songs"> </MobileList>
-        </el-tab-pane>
-      </el-tabs>
+      > -->
+        <!-- <el-tab-pane label="歌曲列表"> </el-tab-pane> -->
+      <!-- </el-tabs> -->
     </div>
+
+    <!-- 分页 -->
+
+
   </div>
 </template>
 

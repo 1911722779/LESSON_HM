@@ -141,6 +141,16 @@ export const getFavoritePlaylists = (data: object) => {
   return http<ResultTable>('post', '/favorite/getFavoritePlaylists', { data })
 }
 
+/** 新建歌单 */
+export const newPlaylist = (playlistName: string) => {
+  return http<Result>('post', '/playlist/addPlaylist', {
+    data: {
+      title: playlistName
+    }
+  })
+}
+
+
 /** 收藏歌单 */
 export const collectPlaylist = (playlistId: number) => {
   return http<Result>('post', '/favorite/collectPlaylist', {

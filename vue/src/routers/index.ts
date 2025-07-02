@@ -52,6 +52,11 @@ const router = createRouter({
       // 歌单详情页 
       component: () => import('@/pages/playlist/[id].vue'),
     },
+    {
+      path: '/like',
+      // 收藏页面路由
+      component: () => import('@/pages/like/index.vue'),
+    },
 
   ],
 })
