@@ -4,7 +4,7 @@ import { getFavoriteSongs } from '@/api/system'
 import defaultCoverImg from '@/assets/song.jpg'
 import { isMobile } from '@/utils'
 import { VideoPlay } from '@element-plus/icons-vue'
-import { formatTime } from '@/utils/index'
+import { formatTotalTime } from '@/utils/index'
 
 // 导入播放器Store
 const audioStore = AudioStore()
@@ -197,12 +197,12 @@ onBeforeUnmount(() => {})
 
           <!-- 歌曲播放总时长 -->
           <span class="text-muted-foreground"
-            >大约: {{ formatTime(songsDetail?.totalDuration) }}</span
+            >大约: {{ formatTotalTime(songsDetail?.totalDuration) }}</span
           >
 
           <!-- 歌曲的数量  xx 首歌曲-->
           <span class="text-muted-foreground"
-            >{{ songsDetail?.songs.length }} 首歌曲</span
+            >{{ pageConfig.total }} 首歌曲</span
           >
         </div>
 

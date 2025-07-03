@@ -12,7 +12,7 @@ export function getBrowserLang() {
   return language.value
 }
 
-export function formatTime(seconds: number): string {
+export function formatTotalTime(seconds: number): string {
   // 将秒数转换为整数分钟数和剩余秒数
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds - hours * 3600) / 60)
@@ -23,6 +23,15 @@ export function formatTime(seconds: number): string {
 
   // 返回格式化的字符串，确保分钟和秒数都至少有两位数
   return `${hours.toString()}小时${minutes.toString()}分${Math.floor(second).toString()}秒 `
+}
+
+export function formatTime(seconds: number): string {
+  // 将秒数转换为整数分钟数和剩余秒数
+  const min = Math.floor(seconds / 60)
+  const sec = Math.floor(seconds % 60)
+
+  // 返回格式化的字符串，确保分钟和秒数都至少有两位数
+  return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
 }
 
 export function formatMillisecondsToTime(totalMilliseconds: number) {

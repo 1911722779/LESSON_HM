@@ -216,7 +216,7 @@ onMounted(async () => {
                     width="200"
                     height="200"
                     loading="lazy"
-                    class="w-full h-full object-cover rounded-t-2xl overflow-hidden"
+                    class="w-full h-64 object-contain rounded-t-2xl overflow-hidden"
                   >
                     <!-- 占位内容,加载比较慢的情况下 默认先贴一张静态图显示一下 -->
                     <template #placeholder>

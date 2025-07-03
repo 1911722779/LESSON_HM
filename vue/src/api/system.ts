@@ -68,6 +68,25 @@ export const updateUserAvatar = (formData: FormData) => {
     transformRequest: [(data) => data], // 防止 axios 处理 FormData
   })
 }
+/** 更新用户头像 */
+export const updatePlaylistAvatar = (id: number, formData: FormData) => {
+  return http<Result>('post', '/playlist/uploadCover/' + id, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+    data: formData,
+    transformRequest: [(data) => data], // 防止 axios 处理 FormData
+  })
+}
+
+/** 更新歌单信息 */
+export const updatePlaylist = (data: object) => {
+  return http<Result>('post', '/playlist/updatePlaylist', { data })
+}
+/** 添加歌曲到歌单 */
+export const addSong2Playlist = (songId: number, playlistId: number) => {
+  return http<Result>('post', '/playlist/addSong2Playlist', { data: { songId, playlistId } })
+}
 
 /** 注销账号 */
 export const deleteUser = () => {
