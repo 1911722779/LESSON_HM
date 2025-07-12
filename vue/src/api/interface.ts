@@ -30,6 +30,9 @@ export interface Song {
   coverUrl: string
   audioUrl: string
   likeStatus: number
+  removeStatus: number
+  // 新增歌词地址属性
+  lyricUrl: string
   releaseTime: string
 }
 
@@ -50,7 +53,10 @@ export interface PlaylistDetail {
   songs: PlaylistSong[]
   likeStatus: number
   comments: PlaylistComment[]
-  isCollected: boolean
+  isCollected: boolean,
+  isPrivate: number
+  createBy: string,
+  createTime: string
 }
 
 export interface Comment {

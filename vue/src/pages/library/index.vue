@@ -76,20 +76,22 @@ const getAllSongData = async () => {
     album: queryParams.album || null
   })
 
+  
   if (result.code === 0 && result.data) {
     // tableData.value=result.data
     //result.data 
     // items ==> Array
     // total 数据总数
+    console.log("歌曲名称",queryParams.songName)
+    
     console.log(result.data)
+    
     //从服务器获取的数据 丢到缓存中存储
     libraryStore.setTableData(result.data)
     //告知分页组件 总条数 让分页组件计算页码和页数
     pageConfig.total = result.data.total || 0
 
   }
-
-
 }
 
 // 提交查询表单
@@ -102,6 +104,9 @@ const submitForm = async (formEl: FormInstance | undefined) => {
 const resetForm = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.resetFields()
+  currentPage.value = 1
+  // 可以选择重置pagesize，但是不推荐
+  // pageSize.value = 15
   await getAllSongData()
 }
 
@@ -119,7 +124,7 @@ onMounted(async () => {
       h-full   高度拉满
       overflow-hidden 溢出隐藏
     -->
-  <div class="flex flex-col flex-1 h-full overflow-hidden p-5">
+  <div class="flex flex-col flex-1 h-full overflow-hidden p-5 mr-4">
 
     <!-- 搜索功能栏 -->
     <div class="flex flex-row mb-5 gap-x-2 ">
@@ -148,11 +153,8 @@ onMounted(async () => {
 
       </el-form>
 
-
-
-
-
     </div>
+    
 
     <!-- 曲库 实际就是 表格
           表头  th

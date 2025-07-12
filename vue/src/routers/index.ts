@@ -57,6 +57,11 @@ const router = createRouter({
       // 收藏页面路由
       component: () => import('@/pages/like/index.vue'),
     },
+        {
+      path: '/user',
+      // 收藏页面路由
+      component: () => import('@/pages/user/index.vue'),
+    },
 
   ],
 })

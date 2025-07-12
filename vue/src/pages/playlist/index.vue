@@ -10,6 +10,9 @@ import router from '@/routers'
 import { isMobile } from '@/utils'
 import { Search, VideoPlay } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useFavoriteStore } from "@/stores/modules/favorite";
+
+const favoriteStore = useFavoriteStore()
 
 const styleTags = ref([
   { name: '全部' },
@@ -97,8 +100,7 @@ const getPlayList = async (queryParams: any) => {
   }
 }
 
-// 搜索事件
-
+// 搜索歌单事件
 const handleSearch = async () => {
   // 查询参数填充值
   queryParams.value.title = searchKeyWord.value
@@ -125,7 +127,6 @@ const handleSwitchTab = async (name: any) => {
   if (currentTab === '我的收藏') {
     //获取用户收藏的歌单列表
     const result = await getFavoritePlaylists(queryParams.value)
-
     //判断一下成功与否 还需要判断一下是否是数组类型
     if (result.code === 0) {
       playlist.value = result.data.items as RecommendedPlay[]
@@ -149,6 +150,7 @@ const handleNewPlaylist = async () => {
     showNewDialog.value = false
     //3. 跳转到对应的新歌单详情页
     router.push('/playlist/' + newPlaylistId)
+    favoriteStore.getFavoritePlaylists()
   } else {
     ElMessage.error(result.message)
   }
@@ -166,58 +168,32 @@ onMounted(async () => {
     <div class="flex flex-row justify-start items-center gap-x-2">
       <!-- 搜索框 -->
       <!-- 复合型输入框  左边 有一个icon  右边是输入框 -->
-      <el-input
-        class="w-64"
-        @keyup.enter="handleSearch"
-        v-model="searchKeyWord"
-        size="large"
-        placeholder="请输入歌单名称"
-        :prefix-icon="Search"
-      />
+      <el-input class="w-64" @keyup.enter="handleSearch" v-model="searchKeyWord" size="large" placeholder="请输入歌单名称"
+        :prefix-icon="Search" />
       <!-- 列表下拉框 -->
       <el-select class="w-64" v-model="styleTag" @change="handleSelectTag">
-        <el-option
-          v-for="item in styleTags"
-          :key="item.name"
-          :label="item.name"
-          :value="item.name"
-        />
+        <el-option v-for="item in styleTags" :key="item.name" :label="item.name" :value="item.name" />
       </el-select>
 
       <!-- 添加歌单按钮 -->
-      <el-button type="primary" size="large" @click="showNewDialog = true"
-        >新建歌单</el-button
-      >
+      <el-button type="primary" size="large" @click="showNewDialog = true">新建歌单</el-button>
     </div>
 
     <!-- 页签 或者 导航栏  flex-1 让元素占整个父容器 全部剩余空间 -->
     <div class="flex flex-1">
-      <el-tabs
-        type="border-card"
-        class="overflow-auto w-full"
-        @tab-click="handleSwitchTab"
-      >
+      <el-tabs type="border-card" class="overflow-auto w-full" @tab-click="handleSwitchTab">
         <!-- 精选歌单 -->
         <el-tab-pane v-for="item in playListType" :key="item" :label="item">
           <div class="grid grid-cols-3 md:grid-cols-5 gap-4 mt-3">
-            <div
-              class="rounded-2xl transition duration-300 bg-card cursor-pointer hover:shadow-lg hover:bg-background"
-              v-for="item in playlist"
-              :key="item.playlistId"
-              @click="router.push('/playlist/' + item.playlistId)"
-            >
+            <div class="rounded-2xl transition duration-300 bg-card cursor-pointer hover:shadow-lg hover:bg-background"
+              v-for="item in playlist" :key="item.playlistId" @click="router.push('/playlist/' + item.playlistId)">
               <!-- 卡片容器 相对布局 -->
               <div class="p-0">
                 <!-- 这个div 宽高自适应的图片宽高  实现层叠布局-->
                 <div class="relative">
                   <!-- 歌单封面 -->
-                  <el-image
-                    :src="item.coverUrl"
-                    width="200"
-                    height="200"
-                    loading="lazy"
-                    class="w-full h-64 object-contain rounded-t-2xl overflow-hidden"
-                  >
+                  <el-image :src="item.coverUrl" width="200" height="200" loading="lazy"
+                    class="w-full h-64 object-contain rounded-t-2xl overflow-hidden">
                     <!-- 占位内容,加载比较慢的情况下 默认先贴一张静态图显示一下 -->
                     <template #placeholder>
                       <el-image :src="defaultCoverImg" />
@@ -225,11 +201,7 @@ onMounted(async () => {
                   </el-image>
 
                   <!-- 播放图标 负边距  -->
-                  <el-icon
-                    color="white"
-                    size="40"
-                    class="absolute right-2 bottom-4 z-10"
-                  >
+                  <el-icon color="white" size="40" class="absolute right-2 bottom-4 z-10">
                     <VideoPlay />
                   </el-icon>
                 </div>
@@ -256,28 +228,17 @@ onMounted(async () => {
     </div>
 
     <!-- 分页组件 -->
-    <nav
-      v-if="!isMobile()"
-      class="flex w-full justify-center mt-3 mx-auto mb-3"
-    >
+    <nav v-if="!isMobile()" class="flex w-full justify-center mt-3 mx-auto mb-3">
       <!-- current-page 当前页  page-size 每页多少条  total 总条数
                     size-change 每页显示多少条事件 current-change 当前页码发生变化事件-->
-      <el-pagination
-        v-bind="pageConfig"
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        @change="handleChange"
-      />
+      <el-pagination v-bind="pageConfig" v-model:current-page="currentPage" v-model:page-size="pageSize"
+        @change="handleChange" />
     </nav>
 
     <!-- 新建歌单对话框 -->
     <el-dialog v-model="showNewDialog" title="创建歌单" width="500">
       <!-- 对话框内容部分 -->
-      <el-input
-        size="large"
-        v-model="playlistName"
-        placeholder="请输入歌单名称"
-      />
+      <el-input size="large" v-model="playlistName" placeholder="请输入歌单名称" />
       <!-- 对话框底部部分 -->
       <template #footer>
         <div class="dialog-footer">

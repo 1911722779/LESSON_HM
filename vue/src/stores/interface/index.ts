@@ -1,3 +1,5 @@
+import { LyricLine } from '@/utils/parsedLyrics';
+import { lyric } from './../../api/index';
 // import { ParsedLyrics } from '@/utils/parsedLyrics'
 /* UserState */
 export interface UserState {
@@ -33,9 +35,10 @@ export interface trackModel {
   album: string // 专辑
   cover: string // 封面
   url: string // 音频地址
+  lyricUrl: string // 歌词地址
   duration: number // 时长
   likeStatus: number
-  //   lyrics?: ParsedLyrics // 歌词
+  lyrics?: LyricLine[] // 歌词
 }
 
 /* MenuState */

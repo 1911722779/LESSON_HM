@@ -5,7 +5,7 @@ import defaultCoverImg from '@/assets/song.jpg'
 import { getArtistDetail } from '@/api/system'
 import { ElMessage } from 'element-plus'
 import { ArtistDetail, SongDetail } from '@/api/interface'
-import { isMobile } from '@/utils'
+import { convertToTrackModel, isMobile } from '@/utils'
 import 'emoji-picker-element'
 
 // 导入播放器Store
@@ -60,28 +60,8 @@ const handlePlayAll = async () => {
   if (songs?.length === 0 || !songs) return
 
   // 2. 解析歌曲列表为 播放列表 songs ==> trackList trackModel[]
-  const trackList = songs.map(
-    ({
-      songId,
-      songName,
-      artistName,
-      album,
-      coverUrl,
-      audioUrl,
-      duration,
-      likeStatus,
-    }) => ({
-      id: songId.toString(),
-      title: songName,
-      artist: artistName,
-      album,
-      cover: coverUrl,
-      url: audioUrl,
-      duration,
-      likeStatus,
-    })
-  )
-
+  const trackList = songs.map((song) => convertToTrackModel(song))
+    .filter((track) => track !== null)
   // 3. 将歌曲列表 放入播放列表 头部 并且从第一首歌曲开始播放
   audioStore.setAudioStore('trackList', trackList)
   audioStore.setAudioStore('currentSongIndex', 0)
@@ -140,11 +120,8 @@ watch(
     <!-- 歌曲信息栏 -->
     <div class="flex flex-col md:flex-row w-full">
       <!-- 左边是 歌手封面 -->
-      <el-avatar
-        :src="artistDetail?.avatar"
-        shape="circle"
-        class="w-full h-full md:w-60 md:h-60 object-cover shadow-lg"
-      >
+      <el-avatar :src="artistDetail?.avatar" shape="circle"
+        class="w-full h-full md:w-60 md:h-60 object-cover shadow-lg">
         <template #placeholder>
           <el-image :src="defaultCoverImg" />
         </template>
@@ -163,22 +140,16 @@ watch(
             {{ artistDetail?.introduction }}
           </p>
           <!-- 歌单所属地区 -->
-          <span class="text-muted-foreground"
-            >地区： {{ artistDetail?.area }}</span
-          >
+          <span class="text-muted-foreground">地区： {{ artistDetail?.area }}</span>
           <!-- 歌手歌曲数量 xx首歌曲 -->
-          <span class="mx-4 text-muted-foreground"
-            >{{ artistDetail?.songs.length }} 首歌曲</span
-          >
+          <span class="mx-4 text-muted-foreground">{{ artistDetail?.songs.length }} 首歌曲</span>
         </div>
 
         <!-- 功能栏列布局 -->
         <div class="flex flex-row gap-x-2">
           <!-- 左侧是 播放全部按钮 带图标 -->
-          <button
-            @click="handlePlayAll"
-            class="bg-blue-400 text-white rounded-lg py-3 px-4 flex items-center justify-center gap-2 w-48"
-          >
+          <button @click="handlePlayAll"
+            class="bg-blue-400 text-white rounded-lg py-3 px-4 flex items-center justify-center gap-2 w-48">
             <!-- VideoPlay图标 -->
             <el-icon size="30">
               <VideoPlay />
@@ -199,7 +170,7 @@ watch(
         class="w-full overflow-auto"
         @tab-click="handleSwitchTab"
       > -->
-        <!-- <el-tab-pane label="歌曲列表"> </el-tab-pane> -->
+      <!-- <el-tab-pane label="歌曲列表"> </el-tab-pane> -->
       <!-- </el-tabs> -->
     </div>
 
@@ -210,10 +181,9 @@ watch(
 </template>
 
 <style lang="css" scoped>
-.coverImg > img {
+.coverImg>img {
   /* 提升最大优先级 */
   width: 15rem !important;
   height: 15rem !important;
 }
 </style>
-

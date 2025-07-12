@@ -4,6 +4,7 @@ import { PlayMode } from './interface'
 import { urlV1 } from '@/api'
 import { addPlayLog } from '@/api/system.ts'
 import { UserStore } from '@/stores/modules/user.ts'
+import { parseLRC } from '@/utils/parsedLyrics'
 
 interface AudioPlayer {
   isPlaying: Ref<boolean>
@@ -11,7 +12,7 @@ interface AudioPlayer {
   currentTime: Ref<number>
   duration: Ref<number>
   volume: Ref<number>
-  //   currentLyricIndex: Ref<number>
+  currentLyricIndex: Ref<number>
   audioElement: Ref<HTMLAudioElement | null>
   play: () => void
   pause: () => void
@@ -39,23 +40,23 @@ export const AudioPlayer = () => {
   const currentTime = ref(0)
   const duration = ref(0)
 
-  //   // 用于追踪当前歌词索引
-  //   const currentLyricIndex = ref(0)
+  // 用于追踪当前歌词索引
+  const currentLyricIndex = ref(0)
 
-  //   currentTrack.value.lyrics?.lyrics
+  // 更新当前歌曲歌词索引
+  const updateCurrentLyricIndex = (newTime: number = 0) => {
+    if (!currentTrack.value.lyrics) return
 
-  //   // 更新当前歌曲歌词索引
-  //   const updateCurrentLyricIndex = (newTime: number = 0) => {
-  //     if (!currentTrack.value.lyrics?.lines) return
-
-  //     // 找到当前时间对应的歌词行
-  //     const lyrics = currentTrack.value.lyrics.lines
-  //     const targetIndex = lyrics.findIndex(
-  //       (line: { time: number }) => line.time > newTime * 1000
-  //     )
-  //     currentLyricIndex.value =
-  //       targetIndex === -1 ? lyrics.length - 1 : targetIndex - 1
-  //   }
+    // 找到当前时间对应的歌词行
+    const lyrics = currentTrack.value.lyrics
+    const targetIndex = lyrics.findIndex(
+      // 以秒为单位 计算当前进度事件是否超过 歌曲播放进度时间
+      (line: { time: number }) => line.time > newTime
+    )
+    // 记录当前歌词索引 方便其他组件知道歌词现在在哪一行
+    currentLyricIndex.value =
+      targetIndex === -1 ? lyrics.length - 1 : targetIndex - 1
+  }
 
   // 播放音乐
   const play = () => {
@@ -168,7 +169,7 @@ export const AudioPlayer = () => {
     // 检查歌曲 URL
     await checkUrl()
     // 歌词是否存在
-    // checkLyrics()
+    checkLyrics()
 
     if (audioElement.value) {
       audioElement.value.src = currentTrack.value.url
@@ -197,22 +198,36 @@ export const AudioPlayer = () => {
   }
 
   // 解析歌词数据
-  //   const checkLyrics = () => {
-  //     // 查看歌词是否存在
-  //     if (!currentTrack.value.lyrics) {
-  //       // 如果 currentTrack 的 lyrics 不存在，则获取歌词
-  //       lyricNew(currentTrack.value.id).then((response) => {
-  //         // 更新 trackList 中的对应歌曲的 url
-  //         const trackIndex = audioStore.trackList.findIndex(
-  //           (track: { id: any }) => track.id === currentTrack.value.id
-  //         )
-  //         if (trackIndex !== -1) {
-  //           audioStore.trackList[trackIndex].lyrics =
-  //             parseAndMergeLyrics(response) // 更新 URL
-  //         }
-  //       })
-  //     }
-  //   }
+  const checkLyrics = async () => {
+    // 查看歌词是否存在
+    if (!currentTrack?.value.lyricUrl) {
+      return
+    }
+    // 存在 则再发送请求解析歌词文件
+    try {
+      const result = await fetch(currentTrack.value.lyricUrl)
+      console.log("歌词地址", result);
+      
+      // 获取歌词失败
+      if (!result.ok) {
+        console.error("获取歌词失败", currentTrack.value.lyricUrl)
+        return
+      }
+      // 获取歌词文件即将歌词文件解析为文本内容
+      const lrcTexts = await result.text()
+      console.log("歌词文件", lrcTexts)
+      
+      // 解析文本内容为歌词数组
+      const lrcLines = parseLRC(lrcTexts)
+      // 将解析后的歌词数组 填充给当前播放的歌曲 歌词数组属性
+      currentTrack.value.lyrics = lrcLines
+      console.log("歌词", currentTrack.value.lyrics)
+    } catch (e) {
+      // 解析歌词失败情况 处理歌词解析不到的情况
+      console.log("歌词解析失败", e);
+      currentTrack.value.lyrics = []
+    }
+  }
 
   // 更新当前播放时间
   const updateTime = () => {
@@ -265,9 +280,9 @@ export const AudioPlayer = () => {
   }
 
   //   // 更新currentLyricIndex
-  //   watch(currentTime, (newTime) => {
-  //     updateCurrentLyricIndex(newTime)
-  //   })
+  watch(currentTime, (newTime) => {
+    updateCurrentLyricIndex(newTime)
+  })
 
   // 组件挂载时初始化音频元素
   onMounted(() => {
@@ -275,7 +290,7 @@ export const AudioPlayer = () => {
     volume.value = audioStore.volume || 50
     audioElement.value.volume = volume.value / 100
     // 歌词是否存在
-    // checkLyrics()
+    checkLyrics()
     // 添加事件监听器
     audioElement.value.addEventListener('timeupdate', updateTime)
     audioElement.value.addEventListener('ended', nextTrack)
@@ -297,7 +312,7 @@ export const AudioPlayer = () => {
     currentTime,
     duration,
     volume,
-    // currentLyricIndex,
+    currentLyricIndex,
     audioElement,
     play,
     pause,

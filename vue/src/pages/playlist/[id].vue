@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { PlaylistComment, PlaylistDetail, Song, SongDetail } from "@/api/interface";
-import { addPlaylistComment, addSong2Playlist, cancelLikeComment, deleteComment, getAllSongs, getPlaylistDetail, likeComment, updatePlaylist, updatePlaylistAvatar } from "@/api/system";
+import { addPlaylistComment, addSong2Playlist, cancelLikeComment, deleteComment, getAllSongs, getFavoritePlaylists, getPlaylistDetail, likeComment, removeSongFromPlaylist, updatePlaylist, updatePlaylistAvatar } from "@/api/system";
 import defaultCoverImg from "@/assets/song.jpg";
 import defaultAvatar from "@/assets/user.jpg";
 import { useFavoriteStore } from "@/stores/modules/favorite";
-import { isMobile } from "@/utils";
-import { Delete, Edit, Lock, More, Plus, Search, VideoPlay } from "@element-plus/icons-vue";
+import { convertToTrackModel, isMobile } from "@/utils";
+import { Delete, Edit, Lock, More, Plus, Search, Unlock, VideoPlay } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox, ElNotification, UploadProps } from "element-plus";
 import "emoji-picker-element";
+import { deletePlaylist } from "@/api/system";
+import router from "@/routers";
 
 // ================================ 歌单添加歌曲 ================================
 
@@ -53,7 +55,7 @@ const getAllSongData = async () => {
     // 歌手名称
     artistName: queryParams.artistName || null,
     // 专辑名称
-    album: queryParams.songName || null
+    album: queryParams.album || null
   })
 
   if (result.code === 0 && result.data) {
@@ -81,19 +83,13 @@ const handleAddSong2Playlist = async (song: Song) => {
 const userStore = UserStore()
 // 获取用户名
 const currentUsername = computed(() => userStore.userInfo.username || '')
-
-
 //导入收藏Store
 const favoriteStore = useFavoriteStore()
-
 // 导入播放器Store
 const audioStore = AudioStore()
 
-
-
 //导入播放器 加载播放列表 播放
 const { loadTrack, play } = useAudioPlayer()
-
 // 导入路由对象
 const route = useRoute()
 
@@ -185,9 +181,6 @@ const handleDeleteComment = async (comment: PlaylistComment) => {
     .catch(() => {
       // 取消后执行的逻辑
     })
-
-
-
 }
 
 //评论选择表情事件
@@ -271,16 +264,16 @@ const handlLike = async (comment: PlaylistComment) => {
 
 }
 
-
-
 // 获取歌单信息
 const getDetail = async (id: number) => {
   const result = await getPlaylistDetail(id)
   if (result.code === 0) {
     // 歌单详情 携带 评论列表 以及 歌单附属歌曲列表
     console.log(result.data)
+    
     playlistDetail.value = result.data as PlaylistDetail
     songs.value = playlistDetail.value.songs
+    isPrivate.value = playlistDetail.value.isPrivate
   } else {
     ElMessage.error("获取歌单详情失败")
   }
@@ -295,7 +288,7 @@ const getDetail = async (id: number) => {
 watch(
   () => route.params.id,
   async (id: string) => {
-    // console.log(id)
+    // console.log("我是id",id)
     // 获取歌单详情信息
     if (id) {
       // 手动激活歌曲列表页签
@@ -312,25 +305,14 @@ watch(
     // 是否只观察一次 ,页面加载一次  用户首次登录 
     // once:true
   }
-
-
-
 )
-
-
-
 // 切换页签事件 name 页签名
 const handleSwitchTab = async (name: any) => {
   //当前页签名称
   const currentTab = name.props.label
   if (currentTab === '歌曲列表') {
-
   } else {
-
   }
-
-
-
 }
 // 切换收藏状态
 const toggleLike = async () => {
@@ -353,19 +335,8 @@ const handlePlayAll = async () => {
   if (songs?.length === 0 || !songs) return
 
   //2. 解析歌曲列表为 播放列表 songs ==> trackList trackModel[]
-  const trackList = songs.map(
-    ({ songId, songName, artistName, album, coverUrl, audioUrl, duration, likeStatus }) => ({
-      id: songId.toString(),
-      title: songName,
-      artist: artistName,
-      album,
-      cover: coverUrl,
-      url: audioUrl,
-      duration,
-      likeStatus
-    })
-  )
-
+  const trackList = songs.map((song) => convertToTrackModel(song))
+    .filter((track) => track !== null)
   //3. 将歌曲列表 放入播放列表 头部 并且从第一首歌曲播放
   audioStore.setAudioStore('trackList', trackList)
   audioStore.setAudioStore('currentSongIndex', 0)
@@ -453,6 +424,71 @@ const handleAvatarUpload = async (options: any) => {
 
 }
 
+// 删除歌单
+const handleDeletePlaylist = async () => {
+  if (!playlistDetail.value) return;
+
+  ElMessageBox.confirm(
+    '确定要删除这个歌单吗？此操作不可撤销！',
+    '警告',
+    {
+      confirmButtonText: '确认删除',
+      cancelButtonText: '取消',
+      type: 'error',
+    }
+  )
+    .then(async () => {
+      const result = await deletePlaylist(playlistDetail.value.playlistId);
+      if (result.code === 0) {
+        ElMessage.success('歌单删除成功');
+        // 删除后刷新收藏列表
+        favoriteStore.getFavoritePlaylists()
+        // 删除成功后跳转到歌单列表页面
+        router.push('/playlist');
+      } else {
+        ElMessage.error(result.message || '删除失败');
+      }
+    })
+
+    .catch(() => {
+      // 用户取消删除
+      ElMessage.info('已取消删除');
+    });
+}
+
+// 删除歌曲
+// 移除歌曲时重新获取歌单详情
+const handleSongRemoved = async (songId) => {
+  // 调用移除歌曲的 API 或逻辑
+  await removeSongFromPlaylist(playlistDetail.value.playlistId, songId)
+
+  // 重新获取歌单详情，刷新页面
+  await getDetail(Number(route.params.id))
+
+  ElMessage.success('歌曲已移除')
+}
+
+
+// 设为私人
+const isPrivate = ref(0)
+// 切换方法
+const togglePrivacy = async () => {
+  if (!playlistDetail.value) return
+  const updateData = {
+    playlistId: playlistDetail.value.playlistId,
+    isPrivate: isPrivate.value ? 0 : 1
+  }
+  const result = await updatePlaylist(updateData)
+
+  if (result.code === 0) {
+    console.log("设成啥了", isPrivate.value)
+    ElMessage.success(isPrivate.value ? '设为私人' : '设为公开')
+    await getDetail(Number(playlistDetail.value.playlistId))
+  } else {
+    ElMessage.error(result.message || '切换失败')
+  }
+}
+
 // 组件创建生命周期函数 初始化数据 获取数据等等
 onMounted(async () => {
 
@@ -496,15 +532,11 @@ const handleSort = (type: string) => {
   }
 
 }
-
-
 //调用登录组件
 const showLoginDialog = () => {
   //事件总线 调用 登录事件
   emitter.emit('show-login-dialog', { show: true })
 }
-
-
 </script>
 
 
@@ -543,10 +575,14 @@ const showLoginDialog = () => {
             </el-image>
 
             <!-- 歌单创建人名 -->
-            <span>Seecen Music</span>
+            <span v-if="playlistDetail?.createBy===userStore.userInfo.userId">{{ userStore.userInfo.username }}</span>
+            <span v-else> Seecen Music</span>
 
             <!-- 歌单的数量  xx 首歌曲-->
             <span>{{ playlistDetail?.songs.length }} 首歌曲</span>
+            <el-icon v-if="isPrivate" size="16" class="ml-2">
+              <lock />
+            </el-icon>
 
           </div>
 
@@ -578,8 +614,16 @@ const showLoginDialog = () => {
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item :icon="Edit" @click="openEditDialog">编辑详情</el-dropdown-item>
-                <el-dropdown-item :icon="Delete">删除歌单</el-dropdown-item>
-                <el-dropdown-item :icon="Lock">设为私人</el-dropdown-item>
+                <el-dropdown-item :icon="Delete" @click="handleDeletePlaylist">删除歌单</el-dropdown-item>
+                <el-dropdown-item v-if="isPrivate === 1" :icon="isPrivate ? Unlock : Lock" @click="togglePrivacy">
+
+                  {{ "设为公开" }} <!-- 动态切换按钮文字 -->
+                </el-dropdown-item>
+
+                <el-dropdown-item v-else :icon="isPrivate ? Unlock : Lock" @click="togglePrivacy">
+
+                  {{ "设为私有" }} <!-- 动态切换按钮文字 -->
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -603,9 +647,12 @@ const showLoginDialog = () => {
         <!-- 歌曲列表  -->
         <el-tab-pane name="歌曲列表" label="歌曲列表">
           <!-- PC端显示的曲库组件 -->
-          <Table v-if="!isMobile()" :data="songs"></Table>
+          <Table v-if="!isMobile()" :playlistId="playlistDetail?.playlistId" :data="songs" @song-removed="handleSongRemoved">
+            
+
+          </Table>
           <!-- 移动端的曲库组件 -->
-          <MobileList v-else :data="songs"></MobileList>
+          <MobileList v-else :data="songs" :playlistId="playlistDetail?.playlistId" ></MobileList>
         </el-tab-pane>
         <!-- 歌单评论 -->
         <el-tab-pane name="歌单评论" label="歌单评论">
@@ -711,8 +758,8 @@ const showLoginDialog = () => {
       </el-tabs>
     </div>
     <!-- 歌曲搜索栏 列布局 -->
-    <div v-if="songs?.length < 10 && playlistDetail.createBy === userStore.userInfo.userId"
-      class="flex flex-col gap-4 h-auto pb-16">
+    <div v-if="songs?.length < 10 && playlistDetail?.createBy === userStore.userInfo.userId"
+      class=" flex flex-col gap-4 pb-16">
       <!-- 分割线 -->
       <!-- <el-divider /> -->
 

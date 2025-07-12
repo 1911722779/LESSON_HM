@@ -21,6 +21,11 @@ export type ResultTable = {
   }
 }
 
+/** 删除歌单 */
+export const deletePlaylist = (playlistId: number) => {
+ return http<Result>('delete', '/playlist/deletePlaylist/' + playlistId)
+ }
+
 /** 用户登录 */
 export const login = (data: object) => {
   return http<Result>('post', '/user/login', { data })
@@ -68,7 +73,7 @@ export const updateUserAvatar = (formData: FormData) => {
     transformRequest: [(data) => data], // 防止 axios 处理 FormData
   })
 }
-/** 更新用户头像 */
+/** 更新歌单头像 */
 export const updatePlaylistAvatar = (id: number, formData: FormData) => {
   return http<Result>('post', '/playlist/uploadCover/' + id, {
     headers: {
@@ -86,6 +91,13 @@ export const updatePlaylist = (data: object) => {
 /** 添加歌曲到歌单 */
 export const addSong2Playlist = (songId: number, playlistId: number) => {
   return http<Result>('post', '/playlist/addSong2Playlist', { data: { songId, playlistId } })
+}
+
+/** 删除歌单歌曲 */
+export const removeSongFromPlaylist = (playlistId: number, songId: number) => {
+  return http<Result>('post', '/playlist/removeSongFromPlaylist', {
+    data: { playlistId, songIds: [songId] },
+  })
 }
 
 /** 注销账号 */
@@ -159,6 +171,8 @@ export const cancelCollectSong = (songId: number) => {
 export const getFavoritePlaylists = (data: object) => {
   return http<ResultTable>('post', '/favorite/getFavoritePlaylists', { data })
 }
+
+
 
 /** 新建歌单 */
 export const newPlaylist = (playlistName: string) => {

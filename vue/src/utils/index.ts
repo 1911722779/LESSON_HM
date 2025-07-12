@@ -1,4 +1,7 @@
+import { Song } from '@/api/interface'
 import { useNavigatorLanguage } from '@vueuse/core'
+import default_album from '@/assets/default_album.jpg'
+import default_cover from '@/assets/cover.png'
 
 /**
  * 获取浏览器语言
@@ -113,5 +116,25 @@ export function isMini(): boolean {
   return window.innerWidth < 410
 }
 
+// 转换歌曲实体
+export const convertToTrackModel = (song: Song) => {
+  // console.log('原始歌曲数据:', song)
+  if (!song.songId || !song.songName || !song.audioUrl) {
+    console.error('歌曲数据不完整:', song)
+    return null
+  }
+  return {
+    id: song.songId.toString(),
+    title: song.songName,
+    artist: song.artistName,
+    album: song.album || default_album,
+    cover: song.coverUrl || default_cover,
+    url: song.audioUrl,
+    // 新增歌曲歌词地址
+    lyricUrl: song.lyricUrl,
+    duration: Number(song.duration) || 0,
+    likeStatus: song.likeStatus || 0,
+  }
+}
 
 

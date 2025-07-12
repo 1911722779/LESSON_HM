@@ -23,6 +23,12 @@ export const UserStore = defineStore('UserStore', {
     isLoggedIn: false,
   }),
   actions: {
+    // 更新用户名
+    updateUsername(newUsername: string) {
+      if (this.userInfo) {
+        this.userInfo.username = newUsername
+      }
+    },
     // 设置用户信息
     setUserInfo(userInfo: any, token?: string) {
       this.userInfo = {
@@ -68,14 +74,14 @@ export const UserStore = defineStore('UserStore', {
         if (response.code === 0) {
           // 先保存token
           const token = response.data
-          
+
           // 设置token到userInfo
           this.userInfo = { token }
 
           try {
             // 再获取用户信息
             const userInfoResponse = await getUserInfo()
-            
+
             if (userInfoResponse.code === 0) {
               this.setUserInfo(userInfoResponse.data, token)
               return { success: true, message: '登录成功' }

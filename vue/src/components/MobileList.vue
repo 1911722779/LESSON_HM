@@ -9,6 +9,7 @@ import {
   getAllSongs,
   getFavoriteSongs,
 } from '@/api/system.ts'
+import { convertToTrackModel } from '@/utils'
 
 const audio = AudioStore()
 const userStore = UserStore()
@@ -34,24 +35,7 @@ const localData = ref<any[]>([])
 //无限翻页 自增
 const count = ref(0)
 
-// 转换歌曲实体
-const convertToTrackModel = (song: Song) => {
-  // console.log('原始歌曲数据:', song)
-  if (!song.songId || !song.songName || !song.audioUrl) {
-    console.error('歌曲数据不完整:', song)
-    return null
-  }
-  return {
-    id: song.songId.toString(),
-    title: song.songName,
-    artist: song.artistName,
-    album: song.album,
-    cover: song.coverUrl || default_album,
-    url: song.audioUrl,
-    duration: Number(song.duration) || 0,
-    likeStatus: song.likeStatus || 0,
-  }
-}
+
 
 interface PageResult {
   items: Song[]
@@ -189,7 +173,7 @@ onMounted(() => {
 
 // 观察数据变化
 watch(dataRef, (newData) => {
-  localData.value=newData
+  localData.value = newData
 })
 </script>
 

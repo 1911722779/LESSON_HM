@@ -2,7 +2,7 @@
 import { SongDetail } from '@/api/interface'
 import { getFavoriteSongs } from '@/api/system'
 import defaultCoverImg from '@/assets/song.jpg'
-import { isMobile } from '@/utils'
+import { convertToTrackModel, isMobile } from '@/utils'
 import { VideoPlay } from '@element-plus/icons-vue'
 import { formatTotalTime } from '@/utils/index'
 
@@ -65,28 +65,8 @@ const handlePlayAll = async () => {
   if (songs?.length === 0 || !songs) return
 
   //2. 解析歌曲列表为 播放列表 songs ==> trackList trackModel[]
-  const trackList = songs.map(
-    ({
-      songId,
-      songName,
-      artistName,
-      album,
-      coverUrl,
-      audioUrl,
-      duration,
-      likeStatus,
-    }) => ({
-      id: songId.toString(),
-      title: songName,
-      artist: artistName,
-      album,
-      cover: coverUrl,
-      url: audioUrl,
-      duration,
-      likeStatus,
-    })
-  )
-
+  const trackList = songs.map((song) => convertToTrackModel(song))
+    .filter((track) => track !== null)
   //3. 将歌曲列表 放入播放列表 头部 并且从第一首歌曲播放
   audioStore.setAudioStore('trackList', trackList)
   audioStore.setAudioStore('currentSongIndex', 0)
@@ -122,7 +102,7 @@ const getMySongs = async () => {
     //赋值总数
     pageConfig.total = result.data.total
 
-    if (songsDetail.value.songs.length > 1) {
+    if (songsDetail.value.songs.length > 0) {
       // 使用第一个歌曲做封面
       songsDetail.value.avatar = songsDetail.value.songs[0].coverUrl
 
@@ -167,7 +147,7 @@ watch(
 )
 
 // 组件卸载之前生命周期
-onBeforeUnmount(() => {})
+onBeforeUnmount(() => { })
 </script>
 
 
@@ -176,11 +156,7 @@ onBeforeUnmount(() => {})
     <!-- 歌手信息栏  -->
     <div class="flex flex-col md:flex-row w-full">
       <!-- 左边是 歌手头像 -->
-      <el-avatar
-        :src="songsDetail?.avatar"
-        shape="circle"
-        class="w-full h-full md:w-60 md:h-60 object-cover shadow-lg"
-      >
+      <el-avatar :src="songsDetail?.avatar" shape="circle" class="w-full h-full md:w-60 md:h-60 object-cover shadow-lg">
         <template #placeholder>
           <el-avatar :src="defaultCoverImg"></el-avatar>
         </template>
@@ -196,24 +172,18 @@ onBeforeUnmount(() => {})
           </h1>
 
           <!-- 歌曲播放总时长 -->
-          <span class="text-muted-foreground"
-            >大约: {{ formatTotalTime(songsDetail?.totalDuration) }}</span
-          >
+          <span class="text-muted-foreground">大约: {{ formatTotalTime(songsDetail?.totalDuration) }}</span>
 
           <!-- 歌曲的数量  xx 首歌曲-->
-          <span class="text-muted-foreground"
-            >{{ pageConfig.total }} 首歌曲</span
-          >
+          <span class="text-muted-foreground">{{ pageConfig.total }} 首歌曲</span>
         </div>
 
         <!-- 歌单信息功能栏行布局 -->
 
         <div class="flex flex-row gap-x-2">
           <!-- 左侧是 播放全部按钮 带图标  items-center y轴居中 justify-center x轴居中-->
-          <button
-            @click="handlePlayAll"
-            class="bg-blue-500 text-white p-3 rounded-lg inline-flex items-center justify-center gap-x-2 w-48"
-          >
+          <button @click="handlePlayAll"
+            class="bg-blue-500 text-white p-3 rounded-lg inline-flex items-center justify-center gap-x-2 w-48">
             <!--VideoPlay图标 -->
             <el-icon size="30">
               <VideoPlay />
@@ -246,18 +216,11 @@ onBeforeUnmount(() => {})
     <!-- TODO 分页待做  -->
 
     <!-- 分页组件 -->
-    <nav
-      v-if="!isMobile()"
-      class="flex w-full justify-center mt-3 mx-auto mb-3"
-    >
+    <nav v-if="!isMobile()" class="flex w-full justify-center mt-3 mx-auto mb-3">
       <!-- current-page 当前页  page-size 每页多少条  total 总条数
                     size-change 每页显示多少条事件 current-change 当前页码发生变化事件-->
-      <el-pagination
-        v-bind="pageConfig"
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        @change="handleChange"
-      />
+      <el-pagination v-bind="pageConfig" v-model:current-page="currentPage" v-model:page-size="pageSize"
+        @change="handleChange" />
     </nav>
   </div>
 </template>

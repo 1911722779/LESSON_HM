@@ -11,6 +11,7 @@ import defaultCoverImg from '@/assets/cover.png'
 import { isMobile, formatTime } from '@/utils'
 import { trackModel } from '@/stores/interface'
 
+
 const router = useRouter()
 const audio = AudioStore()
 const user = UserStore()

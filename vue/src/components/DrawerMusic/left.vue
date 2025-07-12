@@ -8,6 +8,8 @@ import vinylImg from '@/assets/vinyl.png'
 import Recently from '../../layout/components/footer/components/recently.vue'
 const {
   currentTrack,
+  // 引入歌词索引
+  currentLyricIndex,
   isPlaying,
   currentTime,
   duration,
@@ -60,12 +62,12 @@ const togglePlayMode = () => {
       <div :class="` ${isPlaying ? 'is-playing' : ''}`">
         <div class="album">
           <div  class="album-art rounded-md" :style="{
-            backgroundImage: `url(${songDetail?.coverUrl || currentTrack.cover})`,
+            backgroundImage: `url(${encodeURI(songDetail?.coverUrl || currentTrack.cover)})`,
             display: isMobile() ? 'none' : 'block'
           }"></div>
           <div class="vinyl" :style="{
             animationPlayState: isPlaying ? 'running' : 'paused',
-            backgroundImage: `url(${vinylImg}), url(${songDetail?.coverUrl || currentTrack.cover})`
+            backgroundImage: `url(${encodeURI(vinylImg)}), url(${encodeURI(songDetail?.coverUrl || currentTrack.cover)})`
           }"></div>
         </div>
       </div>
@@ -76,6 +78,11 @@ const togglePlayMode = () => {
         </h2>
         <p class="text-xl text-inactive">{{ songDetail?.artistName || currentTrack.artist }}</p>
       </div>
+      <!-- 引入歌词组件 -->
+      <Lyric :lyrics="currentTrack.lyrics" :currentIndex="currentLyricIndex">
+
+      </Lyric>
+
       <!-- 控制区 -->
       <div class="flex gap-1 w-full items-center justify-center mt-8">
         <div :class="isMobile()? 'w-full':'w-2/4'" class="flex items-center gap-2">
